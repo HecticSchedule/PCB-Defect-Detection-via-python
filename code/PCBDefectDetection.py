@@ -12,6 +12,7 @@
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 import os
 
 
@@ -29,11 +30,22 @@ def get_pcb_model(file_name):
 
 # 加载模板图片
 def load_template_images(model_number):
-    template_img_path = f'../images/Template/{model_number:02d}.jpg'
-    print(f"Template image path: {template_img_path}")
+    # template_img_path = f'../images/Template/{model_number:02d}.jpg'
+    # print(f"Template image path: {template_img_path}")
+
+    # 换为命令行输入图片
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_img_path = os.path.abspath(os.path.join(script_dir, f'../images/Template/{model_number:02d}.jpg')).encode(
+        'utf-8')
+    print(f"Template image path: {template_img_path.decode('utf-8')}")
 
     if os.path.exists(template_img_path):
-        template_img = cv.imread(template_img_path)
+        # template_img = cv.imread(template_img_path)
+
+        # 命令行输入图片则需要使用 cv2 中的 cv2.imdecode 直接读取图片适应中文路径
+        with open(template_img_path, 'rb') as f:
+            img_data = f.read()
+            template_img = cv.imdecode(np.frombuffer(img_data, dtype=np.uint8), -1)
         print("Template image loaded successfully.")
         if model_number == 1:
             model_threshold = {
@@ -199,7 +211,13 @@ def detect_pcb_defects(test_img_path):
 
 
 if __name__ == '__main__':
-    test_img_path = input("Enter the path of the test PCB image: ")
+    # test_img_path = input("Enter the path of the test PCB image: ")
+    # result, detected_defects = detect_pcb_defects(test_img_path)
+    if len(sys.argv) < 2:
+        print("Usage: python PCBDefectDetection.py <path_to_test_image>")
+        sys.exit(1)
+
+    test_img_path = sys.argv[1]
     result, detected_defects = detect_pcb_defects(test_img_path)
 
     if result is not None and detected_defects is not None:
