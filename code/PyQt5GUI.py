@@ -2,14 +2,15 @@
 # -*-coding:utf-8 -*-
 
 """
-# @File    : GUI.py
+# @File    : PyQt5GUI.py
 # @Time    : 2023/12/31 21:54
 # @Author  : HecticSchedule
 # @Version : python 3.9
 # @Desc    :
 """
 
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QFileDialog, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QFileDialog, QHBoxLayout, \
+    QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -28,6 +29,8 @@ class PCBDefectDetectionGUI(QWidget):
         self.result_image_label.setAlignment(Qt.AlignCenter)  # 图像居中显示
         self.select_button = QPushButton("Select PCB Image")  # 选择 PCB 图像的按钮
         self.select_button.clicked.connect(self.select_image)  # 连接按钮点击事件到选择图像的方法
+        self.save_button = QPushButton("Save Result Image")  # 添加保存按钮
+        self.save_button.clicked.connect(self.save_image)
 
         # 设置窗口图标
         self.setWindowIcon(QIcon('../images/icon.ico'))
@@ -38,15 +41,28 @@ class PCBDefectDetectionGUI(QWidget):
         main_layout = QVBoxLayout(self)
         # 添加上方标签到布局
         main_layout.addWidget(self.result_label, alignment=Qt.AlignTop | Qt.AlignHCenter)
+        # 创建垂直方向的空白空间，使图片布局居中
+        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        main_layout.addItem(spacer)
         # 创建水平布局管理器
         image_layout = QHBoxLayout()
         # 添加中间图像标签到水平布局
         image_layout.addWidget(self.result_image_label, alignment=Qt.AlignCenter)
         # 将水平布局添加到垂直布局
         main_layout.addLayout(image_layout)
-        # 添加下方按钮到布局
-        self.select_button.setFixedSize(700, 50)  # 调整按钮大小
-        main_layout.addWidget(self.select_button, alignment=Qt.AlignCenter | Qt.AlignBottom)
+        # 创建垂直方向的空白空间，使图片布局居中
+        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        main_layout.addItem(spacer)
+        # 创建水平布局管理器
+        button_layout = QHBoxLayout()
+        # 添加选择按钮到水平布局
+        button_layout.addWidget(self.select_button)
+        # 添加保存按钮到水平布局
+        button_layout.addWidget(self.save_button)
+        self.select_button.setFixedSize(335, 50)  # 调整按钮大小
+        self.save_button.setFixedSize(335, 50)  # 调整按钮大小
+        # 将水平布局添加到垂直布局
+        main_layout.addLayout(button_layout)
 
         # 设置窗口大小
         self.setFixedSize(770, 770)
@@ -101,12 +117,23 @@ class PCBDefectDetectionGUI(QWidget):
         result_text = f"检测到的缺陷: {' '.join(detected_defects)}"
         self.result_label.setText(result_text)
 
-    # 调试窗口大小时的重写函数
-    def resizeEvent(self, event):
-        new_size = event.size()
-        print(f"当前窗口大小：{new_size.width()} x {new_size.height()}")
-        # 调用父类的 resizeEvent 方法以确保正常的事件处理
-        super().resizeEvent(event)
+    def save_image(self):
+        # 获取用户选择保存文件的路径
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Result Image", "",
+                                                   "PNG Image (*.png);;JPEG Image (*.jpg)")
+        if file_path:
+            # 将 OpenCV 图像转换为 QPixmap
+            pixmap = QPixmap.fromImage(self.result_image_label.pixmap().toImage())
+            # 保存 QPixmap 到文件
+            pixmap.save(file_path)
+            print("Result image saved successfully.")
+
+    # # 调试窗口大小时的重写函数
+    # def resizeEvent(self, event):
+    #     new_size = event.size()
+    #     print(f"当前窗口大小：{new_size.width()} x {new_size.height()}")
+    #     # 调用父类的 resizeEvent 方法以确保正常的事件处理
+    #     super().resizeEvent(event)
 
 
 # 主程序入口
